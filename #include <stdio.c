@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
 
 typedef struct {
     int id;
@@ -12,269 +11,172 @@ typedef struct {
     int est_actif;
 } Membre;
 
-const char* FILE_NAME = "gym_data.dat";
-const int ID_MIN = 1;
-const int ID_MAX = 999999;
-const int AGE_MIN = 13;
-const int AGE_MAX = 120;
-const float POIDS_MIN = 30.0f;
-const float POIDS_MAX = 300.0f;
+void ajouterMembre();
+void afficherMembres();
+void rechercherMembre();
+void modifierMembre();
+void supprimerMembre();
+void viderBuffer();
+void menu();
 
-void viderBuffer(void) {
+const char* FILE_NAME = "gym_data.dat";
+
+int main() {
+    printf("====================================\n");
+    printf("    BIENVENUE DANS EASY GYM v1.1    \n");
+    printf("====================================\n");
+    menu();
+    return 0;
+}
+
+void viderBuffer() {
     int c;
     while ((c = getchar()) != '\n' && c != EOF);
 }
 
-int validerID(int id) {
-    return (id >= ID_MIN && id <= ID_MAX);
+void menu() {
+    int choix;
+    do {
+        printf("\n--- MENU PRINCIPAL ---\n");
+        printf("1. Ajouter un membre\n");
+        printf("2. Afficher tous les membres\n");
+        printf("3. Rechercher par ID\n");
+        printf("4. Modifier un membre\n");
+        printf("5. Supprimer un membre\n");
+        printf("0. Quitter\n");
+        printf("Choix : ");
+        
+        if (scanf("%d", &choix) != 1) {
+            printf("Erreur: Entrez un nombre !\n");
+            viderBuffer();
+            choix = -1;
+            continue;
+        }
+        viderBuffer();
+
+        switch (choix) {
+            case 1: ajouterMembre(); break;
+            case 2: afficherMembres(); break;
+            case 3: rechercherMembre(); break;
+            case 4: modifierMembre(); break;
+            case 5: supprimerMembre(); break;
+            case 0: printf("Bye bro! Stay fit!\n"); break;
+            default: printf("Choix invalide !\n");
+        }
+    } while (choix != 0);
 }
 
-int validerAge(int age) {
-    return (age >= AGE_MIN && age <= AGE_MAX);
-}
+void ajouterMembre() {
+    FILE *file = fopen(FILE_NAME, "ab");
+    if (!file) return;
 
-int validerPoids(float poids) {
-    return (poids >= POIDS_MIN && poids <= POIDS_MAX);
-}
-
-int validerAbonnement(const char* abonnement) {
-    return (strcmp(abonnement, "Silver") == 0 ||
-            strcmp(abonnement, "Gold") == 0 ||
-            strcmp(abonnement, "Platinum") == 0);
-}
-
-void afficherMembre(const Membre *m) {
-    printf("%d  |  %s  |  %d  |  %.1f kg  |  %s\n", 
-           m->id, m->nom, m->age, m->poids, m->type_abonnement);
-}
-
-
-void ajouterMembre(void) {
-    FILE *f = fopen(FILE_NAME, "ab");
-    if (!f) {
-        printf("Error: Cannot open file for writing.\n");
-        return;
-    }
-    
     Membre m;
-    int valide = 0;
-    
-    while (!valide) {
-        printf("\n[AJOUT] ID (%d-%d): ", ID_MIN, ID_MAX);
-        if (scanf("%d", &m.id) != 1) {
-            printf("Invalid input. Please enter a number.\n");
-            viderBuffer();
-            continue;
-        }
-        viderBuffer();
-        if (!validerID(m.id)) {
-            printf("Error: ID must be between %d and %d.\n", ID_MIN, ID_MAX);
-            continue;
-        }
-        valide = 1;
-    }
-
-    valide = 0;
-    while (!valide) {
-        printf("Name (max 49 characters): ");
-        if (scanf("%49s", m.nom) != 1) {
-            printf("Invalid input.\n");
-            viderBuffer();
-            continue;
-        }
-        viderBuffer();
-        if (strlen(m.nom) == 0) {
-            printf("Error: Name cannot be empty.\n");
-            continue;
-        }
-        valide = 1;
-    }
-    
-    valide = 0;
-    while (!valide) {
-        printf("Age (%d-%d): ", AGE_MIN, AGE_MAX);
-        if (scanf("%d", &m.age) != 1) {
-            printf("Invalid input. Please enter a number.\n");
-            viderBuffer();
-            continue;
-        }
-        viderBuffer();
-        if (!validerAge(m.age)) {
-            printf("Error: Age must be between %d and %d.\n", AGE_MIN, AGE_MAX);
-            continue;
-        }
-        valide = 1;
-    }
-    
-    valide = 0;
-    while (!valide) {
-        printf("Weight in kg (%.1f-%.1f): ", POIDS_MIN, POIDS_MAX);
-        if (scanf("%f", &m.poids) != 1) {
-            printf("Invalid input. Please enter a number.\n");
-            viderBuffer();
-            continue;
-        }
-        viderBuffer();
-        if (!validerPoids(m.poids)) {
-            printf("Error: Weight must be between %.1f and %.1f kg.\n", POIDS_MIN, POIDS_MAX);
-            continue;
-        }
-        valide = 1;
-    }
-    
-    valide = 0;
-    while (!valide) {
-        printf("Subscription type (Silver/Gold/Platinum): ");
-        if (scanf("%19s", m.type_abonnement) != 1) {
-            printf("Invalid input.\n");
-            viderBuffer();
-            continue;
-        }
-        viderBuffer();
-        if (!validerAbonnement(m.type_abonnement)) {
-            printf("Error: Subscription must be Silver, Gold, or Platinum.\n");
-            continue;
-        }
-        valide = 1;
-    }
-    
+    printf("ID : "); scanf("%d", &m.id);
+    printf("Nom : "); scanf("%49s", m.nom);
+    printf("Age : "); scanf("%d", &m.age);
+    printf("Poids (kg) : "); scanf("%f", &m.poids);
+    printf("Abonnement (Silver/Gold) : "); scanf("%19s", m.type_abonnement);
     m.est_actif = 1;
-    
-    if (fwrite(&m, sizeof(Membre), 1, f) != 1) {
-        printf("Error: Failed to write member to file.\n");
-    } else {
-        printf("\n✓ Member added successfully!\n");
-    }
-    
-    fclose(f);
+
+    fwrite(&m, sizeof(Membre), 1, file);
+    fclose(file);
+    printf("\n>>> Membre ajoute avec succes !\n");
 }
 
-void afficherMembres(void) {
-    FILE *f = fopen(FILE_NAME, "rb");
-    if (!f) {
-        printf("No data found.\n");
+void afficherMembres() {
+    FILE *file = fopen(FILE_NAME, "rb");
+    if (!file) {
+        printf("\nAucune donnee disponible.\n");
         return;
     }
-    
+
     Membre m;
-    int count = 0;
-    
-    printf("\n========================================\n");
-    printf("ID  |  NOM  |  AGE  |  WEIGHT  |  TYPE\n");
-    printf("========================================\n");
-    
-    while (fread(&m, sizeof(Membre), 1, f) == 1) {
-        afficherMembre(&m);
-        count++;
+    printf("\n%-5s %-20s %-5s %-7s %-15s %-10s\n", "ID", "NOM", "AGE", "POIDS", "ABONNEMENT", "STATUT");
+    printf("----------------------------------------------------------------------\n");
+    while (fread(&m, sizeof(Membre), 1, file)) {
+        printf("%-5d %-20s %-5d %-7.1f %-15s %-10s\n",
+               m.id, m.nom, m.age, m.poids, m.type_abonnement,
+               m.est_actif ? "Actif" : "Expire");
     }
-    
-    printf("========================================\n");
-    printf("Total members: %d\n", count);
-    
-    if (ferror(f)) {
-        printf("Error: Failed to read file.\n");
-    }
-    
-    fclose(f);
+    fclose(file);
 }
 
-void supprimerMembre(void) {
+void rechercherMembre() {
     int id;
-    int valide = 0;
-    
-    while (!valide) {
-        printf("\nID to delete (%d-%d): ", ID_MIN, ID_MAX);
-        if (scanf("%d", &id) != 1) {
-            printf("Invalid input. Please enter a number.\n");
-            viderBuffer();
-            continue;
-        }
-        viderBuffer();
-        if (!validerID(id)) {
-            printf("Error: ID must be between %d and %d.\n", ID_MIN, ID_MAX);
-            continue;
-        }
-        valide = 1;
-    }
-    
-    FILE *f = fopen(FILE_NAME, "rb");
-    if (!f) {
-        printf("No data found.\n");
-        return;
-    }
-    
-    FILE *t = fopen("temp.dat", "wb");
-    if (!t) {
-        printf("Error: Cannot create temporary file.\n");
-        fclose(f);
-        return;
-    }
-    
+    printf("ID a rechercher : ");
+    scanf("%d", &id);
+
+    FILE *file = fopen(FILE_NAME, "rb");
+    if (!file) return;
+
     Membre m;
-    int found = 0;
-    
-    while (fread(&m, sizeof(Membre), 1, f) == 1) {
-        if (m.id != id) {
-            if (fwrite(&m, sizeof(Membre), 1, t) != 1) {
-                printf("Error: Failed to write to temporary file.\n");
-                fclose(f);
-                fclose(t);
-                return;
-            }
-        } else {
-            found = 1;
+    int trouve = 0;
+    while (fread(&m, sizeof(Membre), 1, file)) {
+        if (m.id == id) {
+            printf("\nTrouve : %s, %d ans, Poids: %.1fkg [%s]\n", m.nom, m.age, m.poids, m.type_abonnement);
+            trouve = 1;
+            break;
         }
     }
-    
-    fclose(f);
-    fclose(t);
-    
-    if (found) {
-        remove(FILE_NAME);
-        rename("temp.dat", FILE_NAME);
-        printf("✓ Member with ID %d deleted successfully.\n", id);
-    } else {
-        printf("Error: Member with ID %d not found.\n", id);
-        remove("temp.dat");
-    }
+    if (!trouve) printf("Membre introuvable.\n");
+    fclose(file);
 }
 
-int main(void) {
-    int choice;
-    
-    while (1) {
-        printf("\n===== EASY GYM MANAGEMENT =====\n");
-        printf("1. Add Member\n");
-        printf("2. Show All Members\n");
-        printf("3. Delete Member\n");
-        printf("0. Exit\n");
-        printf("==============================\n");
-        printf("Your choice: ");
-        
-        if (scanf("%d", &choice) != 1) {
-            printf("Invalid input. Please enter a number.\n");
-            viderBuffer();
-            continue;
-        }
-        viderBuffer();
-        
-        switch (choice) {
-            case 1:
-                ajouterMembre();
-                break;
-            case 2:
-                afficherMembres();
-                break;
-            case 3:
-                supprimerMembre();
-                break;
-            case 0:
-                printf("\nGoodbye!\n");
-                return 0;
-            default:
-                printf("Invalid choice. Please try again.\n");
+void modifierMembre() {
+    int id;
+    printf("ID du membre a modifier : ");
+    scanf("%d", &id);
+
+    FILE *file = fopen(FILE_NAME, "rb+");
+    if (!file) return;
+
+    Membre m;
+    int trouve = 0;
+    while (fread(&m, sizeof(Membre), 1, file)) {
+        if (m.id == id) {
+            trouve = 1;
+            printf("Nouveau nom : "); scanf("%49s", m.nom);
+            printf("Nouvel age : "); scanf("%d", &m.age);
+            printf("Nouveau poids : "); scanf("%f", &m.poids);
+            printf("Nouveau type (Silver/Gold) : "); scanf("%19s", m.type_abonnement);
+            printf("Statut (1=Actif, 0=Expire) : "); scanf("%d", &m.est_actif);
+            fseek(file, -(long)sizeof(Membre), SEEK_CUR);
+            fwrite(&m, sizeof(Membre), 1, file);
+            printf("Modifications enregistrees !\n");
+            break;
         }
     }
-    
-    return 0;
+    if (!trouve) printf("ID inconnu.\n");
+    fclose(file);
+}
+
+void supprimerMembre() {
+    int id;
+    printf("ID du membre a supprimer : ");
+    scanf("%d", &id);
+
+    FILE *file = fopen(FILE_NAME, "rb");
+    FILE *temp = fopen("temp.dat", "wb");
+    if (!file || !temp) {
+        printf("Erreur de fichier.\n");
+        return;
+    }
+
+    Membre m;
+    int trouve = 0;
+    while (fread(&m, sizeof(Membre), 1, file)) {
+        if (m.id != id) {
+            fwrite(&m, sizeof(Membre), 1, temp);
+        } else {
+            trouve = 1;
+        }
+    }
+    fclose(file);
+    fclose(temp);
+
+    remove(FILE_NAME);
+    rename("temp.dat", FILE_NAME);
+
+    if (trouve) printf("Membre supprime.\n");
+    else printf("ID non trouve.\n");
 }
